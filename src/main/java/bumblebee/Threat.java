@@ -24,6 +24,6 @@ public interface Threat {
 
     void describe(Description description);
 
-    void throwException(DefaultDescription description);
+    void throwException(Description description);
 
 }

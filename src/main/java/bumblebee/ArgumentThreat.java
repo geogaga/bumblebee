@@ -18,21 +18,21 @@ package bumblebee;
 public class ArgumentThreat<T> extends AbstractMatchingThreat<T> {
 
     private String name;
-    private T object;
+    private T item;
 
-    public ArgumentThreat(String name, T object, Matcher<T> matcher) {
+    public ArgumentThreat(String name, T item, Matcher<T> matcher) {
         this.name = name;
-        this.object = object;
+        this.item = item;
         setMatcher(matcher);
     }
 
     public void describe(Description description) {
         description.appendText("Parameter " + name);
         Matcher<T> matcher = getMatcher();
-        matcher.describeMismatch(object, description);
+        matcher.describeMismatch(item, description);
     }
 
-    public void throwException(DefaultDescription description) {
+    public void throwException(Description description) {
         throw new IllegalArgumentException(description.toString());
     }
 }

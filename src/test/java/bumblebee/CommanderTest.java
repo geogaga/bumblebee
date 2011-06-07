@@ -15,12 +15,22 @@
  */
 package bumblebee;
 
+import org.hamcrest.BaseMatcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class CommanderTest {
 
@@ -32,9 +42,56 @@ public class CommanderTest {
     }
 
     @Test
-    public void testFrom() throws Exception {
+    public void testAssertion_notReal() throws Exception {
+        Threat threat = mock(Threat.class);
+        when(threat.isReal()).thenReturn(false);
+
+        commander.from(threat);
+
+        verify(threat, never()).describe(any(Description.class));
+        verify(threat, never()).throwException(any(Description.class));
+    }
+
+    @Test
+    public void testAssertion_isReal() throws Exception {
+        Threat threat = mock(Threat.class);
+        when(threat.isReal()).thenReturn(true);
+
+        InOrder inOrder = inOrder(threat);
+
+        final Description[] descriptionArr = new Description[1];
+
+        BaseMatcher<Description> descriptionMatcher = new BaseMatcher<Description>() {
+
+            public boolean matches(Object o) {
+                descriptionArr[0] = (Description) o;
+                return true;
+            }
+
+            public void describeTo(org.hamcrest.Description description) {
+            }
+        };
+
+        doThrow(new RuntimeException("You have crossed the border.")).when(threat)
+                .throwException(argThat(descriptionMatcher));
+
+        try {
+            commander.from(threat);
+            fail("Must raise " + RuntimeException.class.getName());
+        } catch (RuntimeException ex) {
+            // normal flow
+        }
+
+        final Description description = descriptionArr[0];
+        inOrder.verify(threat).isReal();
+        inOrder.verify(threat).describe(description);
+        inOrder.verify(threat).throwException(description);
+    }
+
+    public void testFrom_ReturningObject() throws Exception {
         Threat threat = mock(Threat.class);
         assertThat(commander.from(threat), sameInstance(commander));
     }
+
 
 }
